@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Para Naomi ✈️</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Georgia', serif;
+    overflow: hidden;
+    padding: 20px;
+  }
+
+  /* Stars */
+  .stars {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .star {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle 3s infinite;
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+  }
+
+  /* Scene */
+  .scene {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .title-hint {
+    color: rgba(255,255,255,0.7);
+    font-size: 15px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    animation: pulse 2s infinite;
+    font-family: sans-serif;
+    transition: opacity 0.4s;
+  }
+  .title-hint.hidden { opacity: 0; pointer-events: none; }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+  }
+
+  /* ENVELOPE */
+  .envelope-wrap {
+    position: relative;
+    width: 320px;
+    height: 220px;
+    cursor: pointer;
+    transition: transform 0.2s;
+    perspective: 800px;
+  }
+  .envelope-wrap:hover:not(.open) { transform: scale(1.03); }
+
+  .envelope-body {
+    position: absolute;
+    bottom: 0;
+    width: 320px;
+    height: 200px;
+    background: linear-gradient(145deg, #e8d5b7, #d4b896);
+    border-radius: 4px 4px 12px 12px;
+    border: 2px solid #c4a876;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+
+  .envelope-tape {
+    position: absolute;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 60px; height: 100%;
+    background: rgba(200,50,50,0.12);
+    border-left: 1px dashed rgba(200,50,50,0.25);
+    border-right: 1px dashed rgba(200,50,50,0.25);
+  }
+
+  .env-triangle-left, .env-triangle-right {
+    position: absolute;
+    bottom: 0;
+    width: 0; height: 0;
+    border-style: solid;
+  }
+  .env-triangle-left {
+    left: 0;
+    border-width: 100px 0 0 160px;
+    border-color: transparent transparent transparent #c9a96e;
+  }
+  .env-triangle-right {
+    right: 0;
+    border-width: 100px 160px 0 0;
+    border-color: transparent #c9a96e transparent transparent;
+  }
+
+  .env-deco {
+    position: absolute;
+    bottom: 16px; left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  }
+  .env-cat { font-size: 28px; line-height: 1; }
+  .env-label {
+    font-size: 11px; color: #8b6914;
+    letter-spacing: 1px;
+    font-family: sans-serif; white-space: nowrap;
+  }
+
+  /* Flap */
+  .envelope-flap {
+    position: absolute;
+    top: 0; left: 0;
+    width: 320px; height: 120px;
+    transform-origin: top center;
+    transition: transform 0.85s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 10;
+  }
+  .envelope-flap svg { width: 100%; height: 100%; }
+  .envelope-wrap.open .envelope-flap {
+    transform: rotateX(180deg);
+  }
+
+  /* Open button */
+  .open-btn {
+    background: none;
+    border: 1.5px solid rgba(255,255,255,0.4);
+    color: white;
+    padding: 9px 26px;
+    border-radius: 20px;
+    font-size: 13px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    font-family: sans-serif;
+    transition: all 0.2s;
+  }
+  .open-btn:hover { background: rgba(255,255,255,0.12); border-color: white; }
+  .open-btn.hidden { display: none; }
+
+  /* ---- MODAL OVERLAY ---- */
+  .letter-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 10, 30, 0.75);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s 0.7s;
+  }
+  .letter-overlay.visible {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .letter-card {
+    background: #fffef8;
+    border-radius: 8px;
+    padding: 24px 22px;
+    max-width: 340px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    transform: translateY(30px) scale(0.96);
+    transition: transform 0.5s cubic-bezier(0.34, 1.3, 0.64, 1) 0.75s;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .letter-overlay.visible .letter-card {
+    transform: translateY(0) scale(1);
+  }
+
+  .letter-content { display: flex; flex-direction: column; gap: 12px; }
+
+  .letter-header {
+    text-align: center;
+    border-bottom: 1px solid #f0e0c0;
+    padding-bottom: 12px;
+  }
+  .bon-voyage {
+    font-size: 20px;
+    color: #8b0000;
+    font-weight: bold;
+    font-family: 'Georgia', serif;
+    line-height: 1.25;
+  }
+  .subtitle-letter {
+    font-size: 10px; color: #aaa;
+    letter-spacing: 1.5px;
+    margin-top: 4px;
+    font-family: sans-serif;
+  }
+
+  .letter-card p {
+    font-size: 13px;
+    color: #3a2a1a;
+    line-height: 1.8;
+    font-family: 'Georgia', serif;
+  }
+  .letter-card p em { font-style: italic; color: #5a4a7a; }
+  .highlight { color: #8b0000; font-weight: bold; }
+
+  .tags {
+    display: flex; flex-wrap: wrap; gap: 5px;
+    margin-top: 4px;
+  }
+  .tag {
+    font-size: 10px; padding: 3px 9px;
+    border-radius: 20px;
+    font-family: sans-serif; font-weight: 500;
+  }
+  .tag-canada { background: #fff0f0; color: #cc0000; border: 1px solid #ffcccc; }
+  .tag-lana   { background: #f0f0ff; color: #483d8b; border: 1px solid #ccccff; }
+  .tag-sushi  { background: #fff5e0; color: #b06000; border: 1px solid #ffd280; }
+
+  .letter-signature {
+    margin-top: 6px;
+    padding-top: 10px;
+    border-top: 1px dashed #f0e0c0;
+    text-align: right;
+    font-size: 12px; color: #8b6914;
+    font-style: italic;
+  }
+
+  .close-btn {
+    display: block;
+    margin: 16px auto 0;
+    background: none;
+    border: 1px solid #d4b896;
+    color: #8b6914;
+    padding: 6px 20px;
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: sans-serif;
+    transition: all 0.2s;
+  }
+  .close-btn:hover { background: #fdf5e6; }
+
+  /* Floaters */
+  .floaters {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .floater {
+    position: absolute;
+    opacity: 0;
+    animation: floatUp 6s ease-in infinite;
+  }
+  @keyframes floatUp {
+    0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
+    10%  { opacity: 0.9; }
+    90%  { opacity: 0.6; }
+    100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; }
+  }
+
+  @media (max-width: 380px) {
+    .envelope-wrap { width: 280px; height: 195px; }
+    .envelope-body { width: 280px; }
+    .envelope-flap { width: 280px; }
+    .env-triangle-left { border-width: 100px 0 0 140px; }
+    .env-triangle-right { border-width: 100px 140px 0 0; }
+    .bon-voyage { font-size: 17px; }
+    .letter-card p { font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+<div class="floaters" id="floaters"></div>
+
+<div class="scene">
+  <p class="title-hint" id="hint">✉️ &nbsp; Para Naomi &nbsp; ✉️</p>
+
+  <div class="envelope-wrap" id="envelope" onclick="openEnvelope()">
+    <div class="envelope-body">
+      <div class="envelope-tape"></div>
+      <div class="env-triangle-left"></div>
+      <div class="env-triangle-right"></div>
+      <div class="env-deco">
+        <span class="env-cat">🐱</span>
+        <span class="env-label">con cariño 🍊</span>
+      </div>
+    </div>
+
+    <!-- FLAP -->
+    <div class="envelope-flap" id="flap">
+      <svg viewBox="0 0 320 120" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="flapGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color:#d4b896"/>
+            <stop offset="100%" style="stop-color:#c2975a"/>
+          </linearGradient>
+        </defs>
+        <polygon points="0,0 320,0 160,112"
+                 fill="url(#flapGrad)"
+                 stroke="#c4a876" stroke-width="2"/>
+        <text x="160" y="54" text-anchor="middle" font-size="24">🐱</text>
+      </svg>
+    </div>
+  </div>
+
+  <button class="open-btn" id="openBtn" onclick="openEnvelope()">
+    Abrir carta 💌
+  </button>
+</div>
+
+<!-- CARTA COMO MODAL -->
+<div class="letter-overlay" id="letterOverlay" onclick="closeOnBackdrop(event)">
+  <div class="letter-card">
+    <div class="letter-content">
+
+      <div class="letter-header">
+        <div class="bon-voyage">✈️ ¡Buen Viaje, Naomi! 🍁</div>
+        <div class="subtitle-letter">— con todo el cariño del mundo —</div>
+      </div>
+
+      <p>
+        Se va a sentir muy raro llegar a la UPY y no encontrarte ahí.
+        Eres mi <span class="highlight">segunda</span>, y eso no es poca cosa —
+        esas cosas se sienten cuando faltan. No te imaginas lo mucho que te voy a extrañar.
+      </p>
+
+      <p>
+        Pero aunque no estés, vas a estar. Cada que pase algo chistoso,
+        cada que algo salga mal o salga bien, lo primero que voy a pensar
+        es <em>"hay que contarle a Naomi."</em> 🌙
+      </p>
+
+      <p>
+        Y cuando estés allá, si un día solo necesitas hablar con nadie, siempre voy a estar disponible.
+      </p>
+
+      <p>
+        Estos dos meses van a pasar rápido, y en cuanto aterrices de regreso
+        hay dos cosas <span class="highlight">obligatorias</span>:
+        cine y Chili's. Sin excusas. Es un trato. 🍽️🎬
+      </p>
+
+      <p>Ve, disfrútalo mucho, y vuelve pronto. 🍁✨</p>
+
+      <div class="tags">
+        <span class="tag tag-canada">🍁 Canadá</span>
+        <span class="tag tag-sushi">🐈 Sushi</span>
+      </div>
+
+      <div class="letter-signature">— J~</div>
+    </div>
+
+    <button class="close-btn" onclick="closeLetter()">cerrar ✕</button>
+  </div>
+</div>
+
+<script>
+  // Stars
+  const starsEl = document.getElementById('stars');
+  for (let i = 0; i < 90; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = 1 + Math.random() * 2.5;
+    s.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;width:${size}px;height:${size}px;animation-delay:${Math.random()*4}s;animation-duration:${2+Math.random()*3}s;`;
+    starsEl.appendChild(s);
+  }
+
+  // Floaters
+  const icons = ['🐱','🍁','🎵','⭐','🌙','✈️','🧡','🐾','🎶'];
+  const floatersEl = document.getElementById('floaters');
+  let floatersStarted = false;
+
+  function startFloaters() {
+    if (floatersStarted) return;
+    floatersStarted = true;
+    function spawn() {
+      const el = document.createElement('div');
+      el.className = 'floater';
+      el.textContent = icons[Math.floor(Math.random() * icons.length)];
+      el.style.cssText = `left:${5+Math.random()*90}%;bottom:-40px;font-size:${13+Math.random()*16}px;animation-duration:${4+Math.random()*5}s;animation-delay:${Math.random()*1.5}s;`;
+      floatersEl.appendChild(el);
+      setTimeout(() => el.remove(), 9000);
+    }
+    spawn();
+    setInterval(spawn, 650);
+  }
+
+  function openEnvelope() {
+    const env = document.getElementById('envelope');
+    if (env.classList.contains('open')) return;
+    env.classList.add('open');
+    document.getElementById('hint').classList.add('hidden');
+    document.getElementById('openBtn').classList.add('hidden');
+    startFloaters();
+    // Show modal after flap animation
+    setTimeout(() => {
+      document.getElementById('letterOverlay').classList.add('visible');
+    }, 600);
+  }
+
+  function closeLetter() {
+    document.getElementById('letterOverlay').classList.remove('visible');
+  }
+
+  function closeOnBackdrop(e) {
+    if (e.target === document.getElementById('letterOverlay')) closeLetter();
+  }
+</script>
+</body>
+</html>
